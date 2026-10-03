@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ระบบใบเสนอราคา - เชียงใหม่ ซักอบรีด</title>
+<style>
+:root{--bg:#eef2f7;--card:#fff;--tx:#1a2233;--mut:#667;--pri:#1d4ed8;--bd:#d5dbe5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1420;--card:#1a2132;--tx:#e8ecf4;--mut:#9aa5ba;--pri:#6b9bff;--bd:#2c3650}}
+:root[data-theme="dark"]{--bg:#0f1420;--card:#1a2132;--tx:#e8ecf4;--mut:#9aa5ba;--pri:#6b9bff;--bd:#2c3650}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;font-size:16px}
+.wrap{max-width:860px;margin:0 auto;padding:16px}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:4px}
+.panel input,.panel select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.btns{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+button{padding:10px 18px;border:0;border-radius:8px;background:var(--pri);color:#fff;font:inherit;cursor:pointer}
+button.alt{background:transparent;color:var(--pri);border:1px solid var(--pri)}
+.hint{grid-column:1/-1;font-size:13px;color:var(--mut)}
+.paper{background:#fff;color:#111;border-radius:6px;padding:28px 24px;box-shadow:0 2px 12px #0002}
+.head{display:flex;gap:16px;align-items:center;border-bottom:2px solid #1d4ed8;padding-bottom:12px}
+.logo{width:64px;height:64px;border-radius:12px;background:#38a0f5;color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;flex:none;text-align:center;line-height:1.1}
+.co{color:#1d4ed8}.co h1{margin:0;font-size:20px}.co div{font-size:14px}
+h2{text-align:center;color:#1d4ed8;margin:18px 0 2px;font-size:20px}
+.sub{text-align:center;color:#1d4ed8;margin-bottom:14px}
+.meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #333;padding:6px 10px}
+th{background:#e8f0ff;color:#1d4ed8}
+td.p{text-align:center;width:130px;color:#1d4ed8;font-weight:600;padding:2px}
+td.p input{width:100%;border:0;background:transparent;text-align:center;font:inherit;color:#1d4ed8;font-weight:600;padding:4px}
+td.n{text-align:center;width:48px}
+.note{margin-top:12px;font-size:14px}
+.sign{margin-top:26px;text-align:center}
+.sign .line{margin:34px auto 4px;width:200px;border-bottom:1px solid #333}
+.ft{margin-top:16px;border-top:1px solid #ccc;padding-top:8px;font-size:14px;color:#c00;text-align:center}
+@media print{body{background:#fff}.panel{display:none}.wrap{padding:0}.paper{box-shadow:none;padding:0}td.p input{color:#1d4ed8}}
+</style></head><body>
+<div class="wrap">
+<div class="panel">
+ <div><label>ประเภทลูกค้า</label><select id="type"></select></div>
+ <div><label>ชื่อลูกค้า</label><input id="cust" placeholder="เช่น โรงแรมสบายใจ"></div>
+ <div><label>วันที่เสนอราคา</label><input id="date" type="date"></div>
+ <div class="hint">คลิกที่ตัวเลขราคาในตารางเพื่อแก้ไขได้ก่อนพิมพ์ (เปลี่ยนประเภทลูกค้าจะรีเซ็ตเป็นราคามาตรฐาน)</div>
+ <div class="btns"><button onclick="window.print()">พิมพ์ / บันทึก PDF</button><button class="alt" onclick="render(true)">รีเซ็ตราคา</button></div>
+</div>
+<div class="paper" id="paper"></div>
+</div>
+<script>
+const H=[["ผ้าปูที่นอน (เล็ก)"],["ผ้าปูที่นอน (ใหญ่)"],["ปลอกหมอน"],["ปลอกผ้านวม (เล็ก)"],["ปลอกผ้านวม (ใหญ่)"],["ผ้าเช็ดตัวสระว่ายน้ำ"],["ผ้าเช็ดตัว"],["ผ้าเช็ดหน้า"],["ผ้าเช็ดมือ"],["ผ้าเช็ดเท้า"],["เสื้อคลุมขาว"],["รองเท้า"],["ไส้นวม เล็ก/ใหญ่"],["ผ้ารองกันเปื้อน เล็ก/ใหญ่"],["ผ้านวม ผ้าห่ม"]];
+const T={
+hotel:{n:"โรงแรม",en:"Hotel",cols:["ราคา / หน่วย (บาท)"],rows:[["ผ้าปูที่นอน (เล็ก)",["8"]],["ผ้าปูที่นอน (ใหญ่)",["10"]],["ปลอกหมอน",["3"]],["ปลอกผ้านวม (เล็ก)",["20"]],["ปลอกผ้านวม (ใหญ่)",["25"]],["ผ้าเช็ดตัวสระว่ายน้ำ",["10"]],["ผ้าเช็ดตัว",["8"]],["ผ้าเช็ดหน้า",["5"]],["ผ้าเช็ดมือ",["5"]],["ผ้าเช็ดเท้า",["5"]],["เสื้อคลุมขาว",["15"]],["รองเท้า",["10"]],["ไส้นวม เล็ก/ใหญ่",["40/80"]],["ผ้ารองกันเปื้อน เล็ก/ใหญ่",["20/30"]],["ผ้านวม ผ้าห่ม",["80-100"]]]},
+special:{n:"โรงแรมลูกค้าเชียงใหม่ (ราคาพิเศษ)",en:"Chiangmai Customer",cols:["ราคา / หน่วย (บาท)"],rows:[["ผ้าปูที่นอน 3.5 ฟุต",["10"]],["ผ้าปูที่นอน 5-6 ฟุต",["10"]],["ปลอกหมอน",["3"]],["ปลอกผ้านวม 3.5 ฟุต",["25"]],["ปลอกผ้านวม 5-6 ฟุต",["30"]],["ผ้าเช็ดตัวสระว่ายน้ำ",["10"]],["ผ้าเช็ดตัว",["10"]],["ผ้าเช็ดหน้า",["5"]],["ผ้าเช็ดมือ",["5"]],["ผ้าเช็ดเท้า",["5"]],["เสื้อคลุมขาว",["20"]],["ไส้นวม เล็ก/ใหญ่",["40/80"]],["ผ้ารองกันเปื้อน เล็ก/ใหญ่",["30/40"]],["ผ้านวม ผ้าห่ม",["100"]]]},
+hostel:{n:"โฮสเทล",en:"Hostel",cols:["ราคา / หน่วย (บาท)"],rows:[["ผ้าปูที่นอน (เล็ก)",["12"]],["ผ้าปูที่นอน (ใหญ่)",["15"]],["ปลอกหมอน",["5"]],["ปลอกผ้านวม (เล็ก)",["25"]],["ปลอกผ้านวม (ใหญ่)",["30"]],["ผ้าเช็ดตัวสระว่ายน้ำ",["10"]],["ผ้าเช็ดตัว",["10"]],["ผ้าเช็ดหน้า",["5"]],["ผ้าเช็ดมือ",["5"]],["ผ้าเช็ดเท้า",["5"]],["เสื้อคลุมขาว",["20"]],["ไส้นวม เล็ก/ใหญ่",["40/80"]],["ผ้ารองกันเปื้อน เล็ก/ใหญ่",["30/40"]],["ผ้านวม ผ้าห่ม",["100"]]]},
+spa:{n:"สปา",en:"Spa",cols:["ผ้าปกติ (บาท)","ผ้านวดน้ำมัน (บาท)"],rows:[["ผ้าเช็ดตัว (ปกติ)",["10","20"]],["ผ้าเช็ดตัว (ใหญ่)",["20","40"]],["ผ้าเช็ดผม",["5","10"]],["ผ้าเช็ดมือ",["5","10"]],["ผ้าเช็ดเท้า",["5","10"]],["เสื้อคลุม",["15","20"]],["ผ้าปูที่นอนเล็ก",["10","20"]],["ผ้าปูที่นอนใหญ่",["15","20"]],["ปลอกหมอน",["5","10"]],["รองเท้า",["10","10"]],["เสื้อนวดไทย",["10","20"]],["กางเกงนวดไทย",["10","20"]],["ผ้ารองคอ",["5","10"]],["ผ้าคาดเตียง",["10","20"]]]}};
+const $=id=>document.getElementById(id);
+$("type").innerHTML=Object.entries(T).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
+$("date").valueAsDate=new Date();
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function thDate(v){if(!v)return"-";return new Date(v+"T00:00:00").toLocaleDateString("th-TH",{year:"numeric",month:"long",day:"numeric"})}
+function render(keep){
+ const t=T[$("type").value];
+ const old=keep?null:[...document.querySelectorAll("td.p input")].map(i=>i.value);
+ const body=t.rows.map((r,i)=>`<tr><td class="n">${i+1}</td><td>${r[0]}</td>${r[1].map(p=>`<td class="p"><input value="${p}" aria-label="ราคา"></td>`).join("")}</tr>`).join("");
+ $("paper").innerHTML=`<div class="head"><div class="logo">MISS<br>LAUNDRY</div><div class="co"><h1>บริษัท เชียงใหม่ ซักอบรีด จำกัด</h1><div>Chiangmai Sakobreed Co., Ltd.</div><div>โทร. 064-652-6415 | ID Line: 0636072564</div></div></div>
+ <h2>ใบเสนอราคาสำหรับ${t.n}</h2><div class="sub">Quotation for ${t.en}</div>
+ <div class="meta"><div><b>เรียน:</b> <span id="pc">${esc($("cust").value)||"..................................."}</span></div><div><b>วันที่เสนอราคา:</b> <span id="pd">${thDate($("date").value)}</span></div></div>
+ <div class="tw"><table><thead><tr><th>ลำดับที่</th><th>รายการ</th>${t.cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>
+ <div class="note"><b>หมายเหตุ:</b> ราคานี้รวมบริการรับ-ส่งฟรี แต่ยังไม่รวมภาษีมูลค่าเพิ่ม 7%</div>
+ <div class="sign">ขอแสดงความนับถือ<br>Your Sincerely<div class="line"></div>นายธันย์ณุพัฒน์ แก้วศิริ<br>ผู้เสนอราคา<br>โทร. 064-652-6415 | ID Line: 0636072564</div>
+ <div class="ft">www.cmilaundry.com &nbsp;|&nbsp; รับซักผ้าโรงแรมเชียงใหม่ 064-652-6415</div>`;
+}
+$("type").onchange=()=>render();
+$("cust").oninput=()=>{$("pc").textContent=$("cust").value||"..................................."};
+$("date").oninput=()=>{$("pd").textContent=thDate($("date").value)};
+render();
+</script></body></html>
